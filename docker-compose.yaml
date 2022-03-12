@@ -9,3 +9,11 @@ services:
       - 8000:8000
     environment:
       - PORT=8000
+
+  hello_hub:
+    container_name: http_helloworld_hub
+    image: guionardo/http_helloworld:v0.0.10
+    ports:
+      - 8001:8001
+    environment:
+      - PORT=8001
