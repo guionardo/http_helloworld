@@ -1,16 +1,19 @@
 FROM golang:1.17.8-alpine AS builder
-# create appuser.
+
 RUN adduser -D -g '' elf
-# create workspace
-WORKDIR /opt/app/
+
+WORKDIR /app
+
 COPY go.mod ./
+
 # fetch dependancies
 RUN go mod download && \
     go mod verify
+
 # copy the source code as the last step
 COPY . .
 # build binary
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -a -installsuffix cgo -o /go/bin/http_helloworld ./cmd/app
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" .
 
 
 # build a small image
@@ -20,8 +23,9 @@ LABEL org.opencontainers.image.source https://github.com/guionardo/http_hellowor
 # import the user and group files from the builder
 COPY --from=builder /etc/passwd /etc/passwd
 # copy the static executable
-COPY --from=builder --chown=elf:1000 /go/bin/http_helloworld /http_helloworld
+COPY --from=builder --chown=elf:1000 /app/http_helloworld /http_helloworld
 # use a non-root user
 USER elf
+
 # run app
-ENTRYPOINT ["./http_helloworld"]
+ENTRYPOINT ["/http_helloworld"]
