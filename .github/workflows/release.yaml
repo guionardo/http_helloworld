@@ -36,5 +36,5 @@ jobs:
           file: ./Dockerfile
           tags: |
             guionardo/${{ env.IMAGE_NAME }}:${{ steps.get_version.outputs.VERSION }}
-            # ghcr.io/guionardo/${{ env.IMAGE_NAME }}:${{ steps.get_version.outputs.VERSION }}
+          # ghcr.io/guionardo/${{ env.IMAGE_NAME }}:${{ steps.get_version.outputs.VERSION }}
     
