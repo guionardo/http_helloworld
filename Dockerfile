@@ -3,7 +3,7 @@ FROM golang:1.17.8-alpine AS builder
 RUN adduser -D -g '' elf
 # create workspace
 WORKDIR /opt/app/
-COPY go.mod go.sum ./
+COPY go.mod ./
 # fetch dependancies
 RUN go mod download && \
     go mod verify
