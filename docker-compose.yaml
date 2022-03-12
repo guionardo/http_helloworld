@@ -12,7 +12,7 @@ services:
 
   hello_hub:
     container_name: http_helloworld_hub
-    image: guionardo/http_helloworld:v0.0.10
+    image: guionardo/http_helloworld:latest
     ports:
       - 8001:8001
     environment:

@@ -11,8 +11,8 @@ env:
   IMAGE_NAME: "http_helloworld"
 
 jobs:
-  multi-registries:
-    name: "Build"
+  build-and-test:
+    name: "Build and test"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -26,11 +26,20 @@ jobs:
       - name: Test
         run: go test -v ./...
 
+  docker-publishing:
+    needs: build-and-test
+    if: github.event.push.branch != 'main'
+    name: "Docker publishing"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2  
+
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v3
         with:
-          images: guionardo/${{ env.IMAGE_NAME }}          
+          images: guionardo/${{ env.IMAGE_NAME }}
 
       - name: Set up Docker Buildx
         if: github.event_name != 'pull_request'
@@ -41,7 +50,7 @@ jobs:
         uses: docker/login-action@v1
         with:
           username: guionardo
-          password: ${{ secrets.DOCKERHUB_TOKEN }}          
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Get the version
         id: get_version
@@ -54,8 +63,4 @@ jobs:
           context: .
           file: ./Dockerfile
           tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}          
-          # tags: |
-          #   guionardo/${{ env.IMAGE_NAME }}:${{ steps.get_version.outputs.VERSION }}
-          # ghcr.io/guionardo/${{ env.IMAGE_NAME }}:${{ steps.get_version.outputs.VERSION }}
-    
+          labels: ${{ steps.meta.outputs.labels }}
