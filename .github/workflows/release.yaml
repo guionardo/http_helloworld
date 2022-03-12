@@ -5,6 +5,9 @@ on:
     tags:
       - "v*"
 
+env:
+  IMAGE_NAME: "http_helloworld"
+
 jobs:
   multi-registries:
     name: "Build"
@@ -30,6 +33,6 @@ jobs:
           context: .
           file: ./Dockerfile
           tags: |
-            guionardo/${{ env.USERS_IMAGE_NAME }}:${{ steps.get_version.outputs.VERSION }}
-            ghcr.io/guionardo/${{ env.USERS_IMAGE_NAME }}:${{ steps.get_version.outputs.VERSION }}
+            guionardo/${{ env.IMAGE_NAME }}:${{ steps.get_version.outputs.VERSION }}
+            ghcr.io/guionardo/${{ env.IMAGE_NAME }}:${{ steps.get_version.outputs.VERSION }}
     
