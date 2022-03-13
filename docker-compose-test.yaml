@@ -1,0 +1,41 @@
+version: '2'
+
+services:
+  nginx-proxy:
+    image: nginxproxy/nginx-proxy
+    ports:
+      - "3000:80"    
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+
+  whoami:
+    image: jwilder/whoami
+    expose:
+      - "8000"
+    environment:
+      - VIRTUAL_HOST=bomperfilsocial.com
+      - VIRTUAL_PATH=/whoami
+      - VIRTUAL_PORT=8000
+  
+
+  hello_world:
+    container_name: http_helloworld_test
+    image: guionardo/http_helloworld:latest
+    expose:
+      - "8001"    
+    environment:
+      - PORT=8001
+      - VIRTUAL_HOST=bomperfilsocial.com
+      - VIRTUAL_PORT=8001
+      - VIRTUAL_PATH=/test
+
+  hello_world_path:
+    container_name: http_helloworld_path
+    image: guionardo/http_helloworld:latest
+    expose:
+      - "8002"    
+    environment:
+      - PORT=8002
+      - VIRTUAL_HOST=bomperfilsocial.com
+      - VIRTUAL_PORT=8002
+      - VIRTUAL_PATH=/hello

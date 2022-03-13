@@ -12,15 +12,30 @@ import (
 
 const defaultPort = "8080"
 
-var startTime time.Time
+var (
+	startTime    time.Time
+	requestCount int
+)
+
+type Response struct {
+	Time         time.Time `json:"time"`
+	IP           string    `json:"ip"`
+	StartTime    time.Time `json:"startTime"`
+	RunningTime  string    `json:"runningTime"`
+	RequestCount int       `json:"requestCount"`
+	Tag          string    `json:"tag,omitempty"`
+}
 
 func hello(w http.ResponseWriter, req *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
-	data := map[string]string{
-		"time":        time.Now().String(),
-		"ip":          req.RemoteAddr,
-		"startTime":   startTime.String(),
-		"runningTime": time.Since(startTime).String(),
+	requestCount += 1
+	data := Response{
+		Time:         time.Now(),
+		IP:           req.RemoteAddr,
+		StartTime:    startTime,
+		RunningTime:  time.Since(startTime).String(),
+		RequestCount: requestCount,
+		Tag:          tag(),
 	}
 
 	body, _ := json.Marshal(data)
@@ -40,17 +55,15 @@ func port() string {
 		p = defaultPort
 	}
 	portNumber, err := strconv.Atoi(p)
-	if err != nil {
-		log.Printf("Invalid port number '%s' - Using %s", p, defaultPort)
-	} else {
-		if portNumber < 1 || portNumber > 65535 {
-			log.Printf("Invalid port number '%d' - Using %s", portNumber, defaultPort)
-			p = defaultPort
-		} else {
-			p = fmt.Sprintf("%d", portNumber)
-		}
+	if err != nil || portNumber < 1 || portNumber > 65535 {
+		log.Printf("Invalid port number '%d' - Using %s - %v", portNumber, defaultPort, err)
+		p = defaultPort
 	}
 	return p
+}
+
+func tag() string {
+	return os.Getenv("TAG")
 }
 
 func main() {

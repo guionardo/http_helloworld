@@ -9,6 +9,7 @@ services:
       - 8000:8000
     environment:
       - PORT=8000
+      - TAG=FROM_LOCAL_BUILD
 
   hello_hub:
     container_name: http_helloworld_hub
@@ -17,3 +18,4 @@ services:
       - 8001:8001
     environment:
       - PORT=8001
+      - TAG=FROM_DOCKER_HUB
