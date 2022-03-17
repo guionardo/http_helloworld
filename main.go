@@ -42,6 +42,11 @@ func hello(w http.ResponseWriter, req *http.Request) {
 	w.Write(body)
 }
 
+func ok(w http.ResponseWriter, req *http.Request) {
+	requestCount += 1
+	w.Write("OK")
+}
+
 func logRequest(handler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("%s %s %s\n", r.RemoteAddr, r.Method, r.URL)
@@ -69,6 +74,7 @@ func tag() string {
 func main() {
 	startTime = time.Now()
 	http.HandleFunc("/", hello)
+	http.HandleFunc("/ok", ok)
 	serve := fmt.Sprintf(":%s", port())
 	log.Printf("http helloworld starting - listening: %s", serve)
 	err := http.ListenAndServe(serve, logRequest(http.DefaultServeMux))
