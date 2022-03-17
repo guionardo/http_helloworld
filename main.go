@@ -44,7 +44,7 @@ func hello(w http.ResponseWriter, req *http.Request) {
 
 func ok(w http.ResponseWriter, req *http.Request) {
 	requestCount += 1
-	w.Write("OK")
+	fmt.Fprintf(w, "OK")	
 }
 
 func logRequest(handler http.Handler) http.Handler {
