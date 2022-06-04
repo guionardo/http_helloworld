@@ -10,7 +10,11 @@ import (
 	"time"
 )
 
-const defaultPort = "8080"
+const (
+	defaultPort = "8080"
+	version     = "0.9.1"
+	toolName    = "http-helloworld"
+)
 
 var (
 	startTime    time.Time
@@ -44,7 +48,7 @@ func hello(w http.ResponseWriter, req *http.Request) {
 
 func ok(w http.ResponseWriter, req *http.Request) {
 	requestCount += 1
-	fmt.Fprintf(w, "OK")	
+	fmt.Fprintf(w, "OK")
 }
 
 func logRequest(handler http.Handler) http.Handler {
@@ -71,12 +75,34 @@ func tag() string {
 	return os.Getenv("TAG")
 }
 
-func main() {
+func main() {	
+	listFiles()
+	log.Printf("%s %s", toolName, version)
 	startTime = time.Now()
-	http.HandleFunc("/", hello)
-	http.HandleFunc("/ok", ok)
+
+	routes := SetupHttpCustomHandlers()
+	handledRoot := false
+	handledOk := false
+	for _, route := range routes {
+		switch route {
+		case "/":
+			handledRoot = true
+		case "/ok":
+			handledOk = true
+		}
+	}
+	if !handledRoot {
+		http.HandleFunc("/", hello)
+	}
+	if !handledOk {
+		http.HandleFunc("/ok", ok)
+	}
+	for _, route := range GetRoutes() {
+		log.Printf("Route %s", route)
+	}
+
 	serve := fmt.Sprintf(":%s", port())
-	log.Printf("http helloworld starting - listening: %s", serve)
+	log.Printf("%s starting - listening: %s", toolName, serve)
 	err := http.ListenAndServe(serve, logRequest(http.DefaultServeMux))
 	if err != nil {
 		log.Fatal(err)

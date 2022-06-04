@@ -19,3 +19,17 @@ services:
     environment:
       - PORT=8001
       - TAG=FROM_DOCKER_HUB
+
+  hello_world_custom_route:
+    container_name: http_helloworld_custom_route
+    build:
+      context: .
+    expose:
+      - "8003"
+    ports:
+      - 8003:8003
+    environment:
+      - PORT=8003
+      - CUSTOM_RESPONSES_FOLDER=/app/custom_responses
+    volumes:
+      - ${PWD}/custom_responses:/app/custom_responses

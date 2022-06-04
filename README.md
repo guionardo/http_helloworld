@@ -36,3 +36,27 @@ You can use the environment vars:
 - TAG = Text for add into JSON response, use for show any custom data
 
 
+## Custom endpoints
+
+You can add your customized endpoints using a configuration file like this:
+
+```json
+[
+    {
+        "path": "/api",
+        "source_file": "api.content"
+    },
+    {
+      "path":"/test",
+      "source_file": "test.content"
+    }
+]
+```
+
+When the server receives a _/api_ request, it will response the body of _api.content_ file. And so on to _/test_ : _test.content_
+
+You need to change the docker command to this:
+
+```bash
+docker run --rm -p 8080:8080 -e PORT=8080 -e CUSTOM_RESPONSES_CONFIG=custom_responses.json -v /app/custom_responses.json:./custom_responses.json -v /app/api.content:./api.content guionardo/http_helloworld:latest
+```
