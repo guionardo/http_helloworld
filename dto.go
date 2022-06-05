@@ -1,5 +1,7 @@
 package main
 
+import "time"
+
 type (
 	CustomResponseFolder struct {
 		Path       string
@@ -18,5 +20,14 @@ type (
 		Method      string
 		StatusCode  uint
 		ContentType string
+	}
+
+	Response struct {
+		Time         time.Time `json:"time"`
+		IP           string    `json:"ip"`
+		StartTime    time.Time `json:"startTime"`
+		RunningTime  string    `json:"runningTime"`
+		RequestCount uint64    `json:"requestCount"`
+		Tag          string    `json:"tag,omitempty"`
 	}
 )

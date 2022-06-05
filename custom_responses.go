@@ -74,7 +74,8 @@ func GetCustomResponseFolder(folderName string) (crf *CustomResponseFolder, err 
 			StatusCode:  statusCode,
 			ContentType: route.ContentType,
 		}
-		log.Printf("Custom response: %s %s %d", route.Path, method, statusCode)
+
+		log.Printf("Custom response: %s %s %d (%s) %s", route.Path, method, statusCode, filepath.Base(route.SourceFile), route.ContentType)
 	}
 	if len(crf.RoutesData) == 0 {
 		return nil, fmt.Errorf("No valid custom responses found in %s", folderName)
@@ -129,7 +130,7 @@ func GetArgResponsesFolder() (customResponsesFolder string) {
 	return
 }
 
-func SetupHttpCustomHandlers() (routes []string) {
+func SetupHttpCustomHandlersRouter(router *http.ServeMux) (routes []string) {
 	responsesFolder := GetArgResponsesFolder()
 	if len(responsesFolder) == 0 {
 		return
@@ -140,18 +141,19 @@ func SetupHttpCustomHandlers() (routes []string) {
 		return
 	}
 	for route, response := range crf.RoutesData {
-		http.HandleFunc(route, func(w http.ResponseWriter, r *http.Request) {
+		router.HandleFunc(route, func(w http.ResponseWriter, r *http.Request) {
+			requestCount.Inc()
 			w.Header().Set("Content-Type", response.ContentType)
 			w.WriteHeader(int(response.StatusCode))
 			w.Write(response.Content)
 		})
 	}
 
-	return GetRoutes()
+	return GetRoutesRouter(router)
 }
 
-func GetRoutes() (result []string) {
-	routes := reflect.ValueOf(http.DefaultServeMux).Elem().FieldByName("m").MapRange()
+func GetRoutesRouter(router *http.ServeMux) (result []string) {
+	routes := reflect.ValueOf(router).Elem().FieldByName("m").MapRange()
 	for routes.Next() {
 		result = append(result, routes.Key().String())
 	}
