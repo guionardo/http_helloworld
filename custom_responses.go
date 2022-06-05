@@ -8,21 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
-)
-
-type (
-	CustomResponseFolder struct {
-		Path   string
-		Routes map[string][]byte
-	}
-	CustomResponse struct {
-		Path       string `json:"path"`
-		SourceFile string `json:"source_file"`
-	}
-	CustomResponseData struct {
-		Path    string
-		Content []byte
-	}
+	"strings"
 )
 
 func GetCustomResponseFolder(folderName string) (crf *CustomResponseFolder, err error) {
@@ -43,8 +29,8 @@ func GetCustomResponseFolder(folderName string) (crf *CustomResponseFolder, err 
 		return nil, fmt.Errorf("Failed to parse routes.json from %s - %v", routesFile, err)
 	}
 	crf = &CustomResponseFolder{
-		Path:   folderName,
-		Routes: make(map[string][]byte),
+		Path:       folderName,
+		RoutesData: make(map[string]CustomResponseData),
 	}
 
 	for _, route := range routes {
@@ -62,45 +48,38 @@ func GetCustomResponseFolder(folderName string) (crf *CustomResponseFolder, err 
 			log.Printf("Failed to read file %s - %v", route.SourceFile, err)
 			continue
 		}
-		crf.Routes[route.Path] = content
+		method := "GET"
+		if len(route.Method) > 0 && strings.Contains("GET POST PUT PATCH DELETE", strings.ToUpper(route.Method)) {
+			method = strings.ToUpper(route.Method)
+		}
+		statusCode := uint(200)
+		if route.StatusCode > 0 {
+			statusCode = route.StatusCode
+		}
+		contentType := "application/json"
+		if len(route.ContentType) == 0 {
+			contentType, err = GetFileContentType(content)
+			if err != nil {
+				log.Printf("Failed to get content type for file %s - %s", route.SourceFile, err)
+			} else {
+				log.Printf("Detected content type for file %s - %s", route.SourceFile, contentType)
+				route.ContentType = contentType
+			}
+		}
+
+		crf.RoutesData[route.Path] = CustomResponseData{
+			Path:        route.Path,
+			Content:     content,
+			Method:      method,
+			StatusCode:  statusCode,
+			ContentType: route.ContentType,
+		}
+		log.Printf("Custom response: %s %s %d", route.Path, method, statusCode)
 	}
-	if len(crf.Routes) == 0 {
+	if len(crf.RoutesData) == 0 {
 		return nil, fmt.Errorf("No valid custom responses found in %s", folderName)
 	}
 	return crf, nil
-}
-
-func GetCustomResponses(configFile string) (responses []CustomResponseData, err error) {
-	log.Printf("Reading custom responses from %s", configFile)
-	content, err := os.ReadFile(configFile)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to read file %s - %v", configFile, err)
-	}
-	var config []CustomResponse
-	err = json.Unmarshal(content, &config)
-	if err != nil {
-		return
-	}
-	for _, response := range config {
-		if response.Path == "" {
-			log.Printf("Invalid response path - %s", response.Path)
-			continue
-		}
-		content, err = os.ReadFile(response.SourceFile)
-		if err != nil {
-			log.Printf("Failed to read file %s - %v", response.SourceFile, err)
-			continue
-		}
-		responses = append(responses, CustomResponseData{
-			Path:    response.Path,
-			Content: content,
-		})
-		log.Printf("Adding custom response for path %s -> %s", response.Path, response.SourceFile)
-	}
-	if len(responses) == 0 {
-		err = fmt.Errorf("No valid responses found in %s", configFile)
-	}
-	return
 }
 
 func GetArgResponsesFolder() (customResponsesFolder string) {
@@ -117,6 +96,16 @@ func GetArgResponsesFolder() (customResponsesFolder string) {
 				customResponsesFolder = arg
 				source = "command line '--config " + customResponsesFolder + "'"
 				break
+			}
+		}
+	}
+
+	if len(customResponsesFolder) == 0 {
+		routesFile, err := filepath.Abs("./custom_responses/routes.json")
+		if err == nil {
+			if _, err := os.Stat(routesFile); err == nil {
+				customResponsesFolder = filepath.Dir(routesFile)
+				source = "default"
 			}
 		}
 	}
@@ -150,9 +139,11 @@ func SetupHttpCustomHandlers() (routes []string) {
 		log.Printf("Failed to get custom responses - %v", err)
 		return
 	}
-	for route, response := range crf.Routes {
+	for route, response := range crf.RoutesData {
 		http.HandleFunc(route, func(w http.ResponseWriter, r *http.Request) {
-			w.Write(response)
+			w.Header().Set("Content-Type", response.ContentType)
+			w.WriteHeader(int(response.StatusCode))
+			w.Write(response.Content)
 		})
 	}
 
@@ -165,15 +156,4 @@ func GetRoutes() (result []string) {
 		result = append(result, routes.Key().String())
 	}
 	return
-}
-
-func listFiles() {
-	files, err := filepath.Glob("*")
-	if err != nil {
-		log.Printf("Failed to list files - %v", err)
-		return
-	}
-	for _, file := range files {
-		fmt.Println(file)
-	}
 }

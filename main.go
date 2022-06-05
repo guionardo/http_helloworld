@@ -12,7 +12,7 @@ import (
 
 const (
 	defaultPort = "8080"
-	version     = "0.9.1"
+	version     = "0.9.2"
 	toolName    = "http-helloworld"
 )
 
@@ -75,9 +75,8 @@ func tag() string {
 	return os.Getenv("TAG")
 }
 
-func main() {	
-	listFiles()
-	log.Printf("%s %s", toolName, version)
+func main() {		
+	log.Printf("%s v%s", toolName, version)
 	startTime = time.Now()
 
 	routes := SetupHttpCustomHandlers()

@@ -38,25 +38,46 @@ You can use the environment vars:
 
 ## Custom endpoints
 
-You can add your customized endpoints using a configuration file like this:
+You can add your customized static endpoints using a configuration file like this:
+
+In folder _./custom_responses_ add a _routes.json_ file with an array of objects:
+
+| Field        | type    | Description                                               |
+|--------------|---------|-----------------------------------------------------------|
+| path         | string  | URL path                                                  |
+| source_file  | string  | name of file with content, without path                   |
+| method       | string  | HTTP method (default = GET)                               |
+| status_code  | integer | HTTP status code (default = 200)                          |
+| content_type | string  | Content-Type header (default = detected from source file) |
+
+Example:
 
 ```json
 [
     {
         "path": "/api",
-        "source_file": "api.content"
+        "source_file": "api.content",
+        "method": "GET",
+        "status_code": 200,
+        "content_type": "application/json",
     },
     {
       "path":"/test",
-      "source_file": "test.content"
+      "source_file": "test.content",
+      "method": "POST",
+      "status_code": 202
     }
 ]
 ```
+
+And add the files _api.content_ and _test.content_ to _./custom_responses_ folder with some content.
 
 When the server receives a _/api_ request, it will response the body of _api.content_ file. And so on to _/test_ : _test.content_
 
 You need to change the docker command to this:
 
 ```bash
-docker run --rm -p 8080:8080 -e PORT=8080 -e CUSTOM_RESPONSES_CONFIG=custom_responses.json -v /app/custom_responses.json:./custom_responses.json -v /app/api.content:./api.content guionardo/http_helloworld:latest
+docker run --rm -p 8080:8080 -e PORT=8080 \
+  -v ${PWD}/custom_responses:/app/custom_responses \
+  guionardo/http_helloworld:latest
 ```

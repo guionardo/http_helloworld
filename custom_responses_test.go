@@ -19,9 +19,15 @@ func TestGetCustomResponseFolder(t *testing.T) {
 			args: args{folderName: "custom_responses"},
 			wantCrf: &CustomResponseFolder{
 				Path: "custom_responses",
-				Routes: map[string][]byte{
-					"/api": []byte("ABCD"),
-				},
+				RoutesData: map[string]CustomResponseData{
+					"/api": {
+						Path:        "/api",
+						Content:     []byte(`{"message":"Hello World"}`),
+						Method:      "GET",
+						StatusCode:  200,
+						ContentType: "application/json",
+					},
+				},				
 			},
 		},
 	}
