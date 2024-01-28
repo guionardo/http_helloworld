@@ -17,7 +17,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" .
 
 
 # build a small image
-FROM alpine:3.14.1
+FROM alpine:3.18.6
 
 WORKDIR /app
 RUN mkdir /app/custom_responses
